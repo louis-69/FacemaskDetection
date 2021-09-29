@@ -8,9 +8,10 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 
 # Flast requirements
-from flask import Flask, jsonify, request
+from flask import Flask, render_template, url_for, Response
+# from flask import Flask, jsonify, request
 from flask_restful import Api, Resource
-from model.Train import train_model
+#from model.Train import train_model
 
 # Initialize Flask
 app = Flask(__name__)
@@ -77,7 +78,7 @@ def detect_and_predict_mask(frame, face_net, mask_net):
 
     # return a 2-tuple of the face locations and their corresponding
     # locations
-    return jsonify(locs, preds)
+    return (locs, preds)
 
 
 # load our serialized face detector model from disk
@@ -93,7 +94,10 @@ print("[INFO] starting video stream...")
 vs = VideoStream(src=0).start()
 
 # loop over the frames from the video stream
-while True:
+detection = detect_and_predict_mask
+# while detection:
+@app.route('/')
+def detect(detection):
     # grab the frame from the threaded video stream and resize it
     # to have a maximum width of 400 pixels
     frame = vs.read()
@@ -129,8 +133,10 @@ while True:
     key = cv2.waitKey(1) & 0xFF
 
     # if the `q` key was pressed, break from the loop
-    if key == ord("q"):
-        break
+    # if key == ord("q"):
+    #     break
+    return Response(detect(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 app.run(debug=True, host='0.0.0.0')
